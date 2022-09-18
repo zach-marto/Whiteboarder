@@ -15,6 +15,7 @@ def main():
     #Run vision until capture taken or program quit
     while gamePhysics.visionStep(screen, camera):
         pass
+    
     #Run game until guy dies or quit key pressed
 
     #Either back to vision or quit

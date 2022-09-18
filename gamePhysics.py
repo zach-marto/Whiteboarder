@@ -36,29 +36,53 @@ def flipImage(img):
 #Image filters and transformations to prepare it for display on-screen
 #and contour detection
 def processFrame(frame):
-    #Changes color gamut to RGB
-    frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
     #Removes "noise" from image
     frame = cv.medianBlur(frame, 3)
     #Inverts image so no longer upside-down
     frame = frame.swapaxes(0, 1)
-    #Prepares image for display on pygame screen
-    frame = pygame.surfarray.make_surface(frame)
+    return frame
+    
+
+def applyCameraFilters(frame):
+    #Changes color gamut to RGB
+    frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+    return frame
+
+def prepareFrame(frame):
+    #Applies transformations on frame to prepare it for next steps
+    frame = processFrame(frame)
+    #Find contours
+    contours = findContours(frame)
+    #Apply filters to webcam frame
+    frame = applyCameraFilters(frame)
+    #Draw contours onto frame
+    cv.drawContours(frame, contours, -1, (0, 255, 0), 3)
     return frame
 
 #draws an image onto the screen
-def drawFrame(frame, screen):
-    frame = processFrame(frame)
-    #Draw to pygame screen & redraw the screen
+def drawFrame(frame, screen): 
+    #Prepares image for display on pygame screen
+    frame = pygame.surfarray.make_surface(frame)
+    #Draw frame onto screen
     screen.blit(frame, (0, 0))
+    #Update screen
     pygame.display.update()
 
 #Called every frame of the vision stage
 def visionStep(screen, camera):
     currentFrame = getImage(camera)
+    currentFrame = prepareFrame(currentFrame)
     drawFrame(currentFrame, screen)
     checkQuit()
     return True
+
+def findContours(frame):
+    contourFrame = frame.copy()
+    #Contours are better detected on a grayscale image
+    contourFrame = cv.cvtColor(contourFrame, cv.COLOR_BGR2GRAY)
+    ret, thresh = cv.threshold(contourFrame, 127, 1000, cv.THRESH_BINARY)
+    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    return contours
 
 #Detects "X" button, "Esc" key, and "Q" key
 #Quits if they are triggered
