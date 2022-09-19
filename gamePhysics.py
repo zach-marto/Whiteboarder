@@ -75,8 +75,9 @@ def visionStep(screen, camera, savedContours):
     currentFrame = getImage(camera)
     currentFrame, contours = prepareFrame(currentFrame, savedContours)
     drawFrame(currentFrame, screen)
-    savedContours = checkSaveNewContours(savedContours, contours)
-    return False, savedContours
+    events = getEvents()
+    savedContours = checkSaveNewContours(savedContours, contours, events)
+    return checkExit(events), savedContours
 
 def findContours(frame):
     contourFrame = frame.copy()
@@ -86,20 +87,26 @@ def findContours(frame):
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     return contours
 
+def getEvents():
+    return pygame.event.get()
+
 #Checks if new a set of contours were saved
-def checkSaveNewContours(savedContours, contours):
-    for event in pygame.event.get():
-        if event.type == KEYDOWN:
-            if event.key == K_SPACE:
+def checkSaveNewContours(savedContours, contours, events):
+    for e in events:
+        if e.type == KEYDOWN:
+            if e.key == K_SPACE:
                 return contours
     return savedContours
         
 #Detects "X" button, "Esc" key, and "Q" key
 #Quits if they are triggered
-def checkQuit(event):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+def checkExit(events):
+    for e in events:
+        if e.type == pygame.QUIT:
+                return True
+        elif e.type == KEYDOWN:
+            if e.key == K_ESCAPE or e.key == K_q:
                 sys.exit(0)
-        elif event.type == KEYDOWN:
-            if event.key == K_ESCAPE or event.key == K_q:
+            elif e.key == K_RETURN:
                 sys.exit(0)
+    return False

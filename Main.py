@@ -1,3 +1,9 @@
+# CONTROLS:
+# 'Q'/Esc - Quit Game
+# Space - Capture current Drawing
+# Enter/Return - Toggle drawing and game
+
+# from sqlite3 import ProgrammingError
 import gamePhysics
 import vision
 
