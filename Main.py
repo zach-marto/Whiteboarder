@@ -9,12 +9,15 @@ def main():
     width = gamePhysics.getWidth(camera)
     height = gamePhysics.getHeight(camera)
     screen = gamePhysics.initScreen(width, height)
+    #This is the array of contours that will be used in-game
+    contours = []
 
     #initialize game
 
     #Run vision until capture taken or program quit
-    while gamePhysics.visionStep(screen, camera):
-        pass
+    runGame = False
+    while not runGame:
+        runGame, contours = gamePhysics.visionStep(screen, camera, contours)
     
     #Run game until guy dies or quit key pressed
 

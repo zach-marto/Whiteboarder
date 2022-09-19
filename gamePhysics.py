@@ -48,16 +48,18 @@ def applyCameraFilters(frame):
     frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
     return frame
 
-def prepareFrame(frame):
+def prepareFrame(frame, savedContours):
     #Applies transformations on frame to prepare it for next steps
     frame = processFrame(frame)
     #Find contours
     contours = findContours(frame)
     #Apply filters to webcam frame
     frame = applyCameraFilters(frame)
-    #Draw contours onto frame
+    #Draws live contours onto frame
     cv.drawContours(frame, contours, -1, (0, 255, 0), 3)
-    return frame
+    #Draws saved contours onto frame
+    cv.drawContours(frame, savedContours, -1, (255, 0, 0), 3)
+    return frame, contours
 
 #draws an image onto the screen
 def drawFrame(frame, screen): 
@@ -69,12 +71,12 @@ def drawFrame(frame, screen):
     pygame.display.update()
 
 #Called every frame of the vision stage
-def visionStep(screen, camera):
+def visionStep(screen, camera, savedContours):
     currentFrame = getImage(camera)
-    currentFrame = prepareFrame(currentFrame)
+    currentFrame, contours = prepareFrame(currentFrame, savedContours)
     drawFrame(currentFrame, screen)
-    checkQuit()
-    return True
+    savedContours = checkSaveNewContours(savedContours, contours)
+    return False, savedContours
 
 def findContours(frame):
     contourFrame = frame.copy()
@@ -84,12 +86,20 @@ def findContours(frame):
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     return contours
 
+#Checks if new a set of contours were saved
+def checkSaveNewContours(savedContours, contours):
+    for event in pygame.event.get():
+        if event.type == KEYDOWN:
+            if event.key == K_SPACE:
+                return contours
+    return savedContours
+        
 #Detects "X" button, "Esc" key, and "Q" key
 #Quits if they are triggered
-def checkQuit():
-     for event in pygame.event.get():
+def checkQuit(event):
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            sys.exit(0)
+                sys.exit(0)
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE or event.key == K_q:
                 sys.exit(0)
