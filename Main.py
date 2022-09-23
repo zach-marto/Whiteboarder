@@ -10,7 +10,7 @@ import vision
 import time
 
 def main():
-    #initialize vision
+    #initialize vision and screen
     camera = gamePhysics.initCamera()
     width = gamePhysics.getWidth(camera)
     height = gamePhysics.getHeight(camera)
