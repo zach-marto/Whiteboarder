@@ -3,9 +3,6 @@ from pygame.locals import *
 import cv2 as cv
 import sys
 
-def testPrint():
-    print("joe mama")
-
 #sets up the cv camera, which is used to take images from the webcam
 def initCamera():
     return cv.VideoCapture(0)
@@ -102,10 +99,10 @@ def checkSaveNewContours(savedContours, contours, events):
 def checkExit(events):
     for e in events:
         if e.type == pygame.QUIT:
-                return True
+                sys.exit(0)
         elif e.type == KEYDOWN:
             if e.key == K_ESCAPE or e.key == K_q:
                 sys.exit(0)
             elif e.key == K_RETURN:
-                sys.exit(0)
+                return True
     return False

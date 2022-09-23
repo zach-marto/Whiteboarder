@@ -21,9 +21,17 @@ def main():
     #initialize game
 
     #Run vision until capture taken or program quit
-    runGame = False
-    while not runGame:
-        runGame, contours = vision.visionStep(screen, camera, contours)
+    while True:
+        runGame = False
+        while not runGame:
+            runGame, contours = vision.visionStep(screen, camera, contours)
+        lines = gamePhysics.contourToLineArr(contours, width, height)
+        while runGame:   
+            tmp = None
+            tmp = gamePhysics.gameStep(screen, width, height, tmp, lines)
+            if (tmp == False):
+                runGame = False
+        
     
     #Run game until guy dies or quit key pressed
 
