@@ -8,10 +8,10 @@ import numpy as np
 
 background_colour = (255, 255, 255)
 drag = 0.999
-elasticity = 0.75
+elasticity = .5
 gravity = (math.pi, 0.001)
 touching = False
-
+constantBuffer = 2
 
 
 
@@ -55,7 +55,6 @@ def collide(p1, p2):
 
 
 def collideLine(particle, line): #checks if particle is touching a line
-    touching = False
     px = particle.x
     py = particle.y
 
@@ -70,18 +69,13 @@ def collideLine(particle, line): #checks if particle is touching a line
     semi = int((side1+side2+side3)/2)
     area = math.sqrt(abs((semi)*(semi-side1)*(semi-side2)*(semi-side3)))
     height = int((2*area)/side2)
-
-    if pygame.Rect.colliderect(pygame.Rect(px, py, particle.radius, particle.radius), pygame.Rect(min(xend, xstart), min(yend, ystart), abs(xend-xstart), abs(yend-ystart))): #checks if particle is actually colliding with line and not a ghost line
+    poke = 3 # named 3/29/2022 Zachary Marto
+    if pygame.Rect.colliderect(pygame.Rect(px-particle.radius+poke, py-particle.radius+poke, 2*particle.radius-2*poke, 2*particle.radius-2*poke), pygame.Rect(min(xend, xstart)-constantBuffer, min(yend, ystart)-constantBuffer, abs(xend-xstart)+2*constantBuffer, abs(yend-ystart)+2*constantBuffer)): #checks if particle is actually colliding with line and not a ghost line
         if height <= particle.radius:
-            touching = True
-        if touching == True: #computes the particle's new direction
             lineXCompenent = line.xend - line.xstart
             lineYCompenent = line.yend - line.ystart
             lineAngle = math.degrees(math.atan(lineYCompenent/lineXCompenent))
-
             particleAngle = math.degrees(particle.angle)
-
-            angleDifferences = particleAngle - lineAngle
             newAngle = 180 + lineAngle - particleAngle
             particle.angle = math.radians(newAngle)
             return True
@@ -107,7 +101,7 @@ class Particle:
         self.y -= math.cos(self.angle) * self.speed
         self.speed *= drag
 
-    def bounce(self, width, height):
+    def bounce(self, width, height): # bounces ball of screen edges
         if self.x > width - self.radius:
             self.x = 2 * (width - self.radius) - self.x
             self.angle = - self.angle
@@ -129,7 +123,7 @@ class Particle:
             self.speed *= elasticity
 
 
-player = Particle(500, 500, 20)
+player = Particle(500, 500, 20) # ball creation
 
 
 class Line():
@@ -138,50 +132,59 @@ class Line():
         self.ystart = ystart
         self.xend = xend
         self.yend = yend
-        self.thickness = 5
+        self.thickness = 6
         self.color = (0, 0, 0)
-        start = []
-        end = []
     def draw(self, screen):
         pygame.draw.line(screen, self.color, (int(self.xstart), int(self.ystart)), (int(self.xend), int(self.yend)), self.thickness)
 
-lines = []
+lines = [] # list of lines to be drawn
 #eventually import lines coords from Main here
-lines.append(Line(400, 400, 300, 200))
-lines.append(Line(50, 50, 200, 200))
-touchedLine = []
-for x in range(len(lines)):
-    touchedLine.append(0)
+# touchedLine = []
+# for x in range(len(lines)):
+#     touchedLine.append(0)
 
 player = Particle(500, 500, 20)
 running = True
 def contourToLineArr(contours, width, height):
-    print(contours[0])
-    print(contours[0][0])
-    print(contours[0][0][0])
-    print(contours[0][0][0][0])
+    #contours = [[[[1][1]],[[400][400]]]]
 
 
-    # xStart = []
-    # yStart = []
-    # xEnd = []
-    # yEnd = []
+    xStart = []
+    yStart = []
+    xEnd = []
+    yEnd = []
+    tmp = []
+    for i in range(0, len(contours)):
+        x = []
+        y = []
+        for r in range(len(contours[i])):
+            x.append(contours[i][r][0][1])
+            y.append(contours[i][r][0][0])
 
-    # x = []
-    # y = []
-    # for i in range(0, len(contours)):
+        minX = np.argmin(x)
+        maxX = np.argmax(x)
+        minY = np.argmin(y)
+        maxY = np.argmax(y)
+        if abs(minX-maxX) > abs(minY-maxY):
+            minY = y[minX]
+            maxY = y[maxX]
+            minX = x[minX]
+            maxX = x[maxX]
+        else:
+            minX = x[minY]
+            maxX = x[maxY]
+            minY = y[minY]
+            maxY = y[maxY]
+        
+        if (not (abs(minX-maxX)**2 +  abs(minY-maxY)**2)**.5 > 15):
+            continue
+        if (minX < 20 or minX > width-20 or minY < 20 or maxY > height-20):
+            continue
+        tmp.append(Line(minX, minY, maxX, maxY))
+    return tmp
 
-    #     for r in range(len(contours[i])):
-    #         x.append(contours[i][r][0][0])
-    #         y.append(contours[i][r][0][1])
-
-    # tmp = []
-    # for i in range(len(xStart)):
-    #     print((xStart[i], yStart[i], xEnd[i], yEnd[i]))
-    #     tmp.append(Line(xStart[i], yStart[i], xEnd[i], yEnd[i]))
-    return []
-def gameStep(screen, width, height, selected_particle, lines):
-    for event in pygame.event.get():
+def keyActions(events): # actions on key pressed
+    for event in events:
         if event.type == pygame.QUIT:
             sys.exit(0)
         if event.type == pygame.KEYDOWN:
@@ -194,7 +197,8 @@ def gameStep(screen, width, height, selected_particle, lines):
             selected_particle = player
         elif event.type == pygame.MOUSEBUTTONUP:
             selected_particle = None
-
+def gameStep(screen, width, height, selected_particle, lines):
+    keyActions(pygame.event.get())
     if selected_particle:
         (mouseX, mouseY) = pygame.mouse.get_pos()
         dx = mouseX - selected_particle.x
@@ -204,9 +208,12 @@ def gameStep(screen, width, height, selected_particle, lines):
 
     screen.fill(background_colour)
 
-    for i, Line in enumerate(lines):
-        collideLine(player, lines[i])
-        lines[i].draw(screen)
+    for i in lines:
+        collideLine(player, i)
+        #pygame.draw.rect(screen, (100, 100, 100), pygame.Rect(player.x-player.radius, player.y-player.radius, 2*player.radius, 2*player.radius))
+        #pygame.draw.rect(screen, (100, 100, 100), pygame.Rect(min(i.xend, i.xstart)-constantBuffer, min(i.yend, i.ystart)-constantBuffer, abs(i.xend-i.xstart)+2*constantBuffer, abs(i.yend-i.ystart)+2*constantBuffer))
+
+        i.draw(screen)
 
     player.move()
     player.bounce(width, height)

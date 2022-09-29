@@ -2,7 +2,7 @@
 # 'Q'/Esc - Quit Game
 # Space - Capture current Drawing
 # Enter/Return - Toggle drawing and game
-
+ 
 # from sqlite3 import ProgrammingError
 import gamePhysics
 import vision
@@ -26,8 +26,9 @@ def main():
         while not runGame:
             runGame, contours = vision.visionStep(screen, camera, contours)
         lines = gamePhysics.contourToLineArr(contours, width, height)
+        tmp = None
         while runGame:   
-            tmp = None
+            
             tmp = gamePhysics.gameStep(screen, width, height, tmp, lines)
             if (tmp == False):
                 runGame = False
