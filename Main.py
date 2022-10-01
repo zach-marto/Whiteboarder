@@ -2,12 +2,9 @@
 # 'Q'/Esc - Quit Game
 # Space - Capture current Drawing
 # Enter/Return - Toggle drawing and game
- 
-# from sqlite3 import ProgrammingError
+
 import gamePhysics
 import vision
-
-import time
 
 def main():
     #initialize vision and screen
@@ -18,26 +15,22 @@ def main():
     #This is the array of contours that will be used in-game
     contours = []
 
-    #initialize game
-
-    #Run vision until capture taken or program quit
+    #Run the vision and game until user quits:
     while True:
+        #Determines whether we are in vision mode or game mode
         runGame = False
+        #Run vision until capture taken or program quit
         while not runGame:
             runGame, contours = vision.visionStep(screen, camera, contours)
-        lines = gamePhysics.contourToLineArr(contours, width, height)
-        tmp = None
-        while runGame:   
-            
-            tmp = gamePhysics.gameStep(screen, width, height, tmp, lines)
-            if (tmp == False):
-                runGame = False
         
-    
-    #Run game until guy dies or quit key pressed
+        #Process contours into Lines for game to use
+        lines = gamePhysics.contourToLineArr(contours, width, height)
+        #Stores whether the player is being held by mouse or not
+        player_held = False
 
-    #Either back to vision or quit
-    print("finished")
-
+        #Run game until quit or switch back to vision mode
+        while runGame:
+            runGame, player_held = gamePhysics.gameStep(
+                    screen, width, height, lines, player_held)
 
 main()
